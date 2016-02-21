@@ -10,6 +10,8 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    // MARK: - Properties
+    
     static  let sharedInstance = ViewController()
     
     var calculatedLabel = UILabel()
@@ -29,7 +31,11 @@ class ViewController: UIViewController {
     var multiplicationButton = UIButton()
     var enterButton = UIButton()
     
+    var displayNumber = ""
+    
+    
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         createLabel()
         createAllButtons()
@@ -42,9 +48,12 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    // MARK: - UI Creation
+    
     func createLabel() {
         calculatedLabel.translatesAutoresizingMaskIntoConstraints = false
-        calculatedLabel.backgroundColor = UIColor.grayColor()
+        calculatedLabel.backgroundColor = UIColor.blackColor()
+        calculatedLabel.textColor = .whiteColor()
         
         view.addSubview(calculatedLabel)
         
@@ -56,11 +65,37 @@ class ViewController: UIViewController {
         for button in buttonArray {
             button.translatesAutoresizingMaskIntoConstraints = false
             button.backgroundColor = UIColor.whiteColor()
-            button.layer.borderWidth = 3
+            button.layer.borderWidth = 1
+            button.clipsToBounds = true
             button.setTitleColor(UIColor.blackColor(), forState: .Normal)
+            button.titleLabel?.font = UIFont(name: "Apple SD Gothic Neo", size: 30)
             button.layer.borderColor = UIColor.blackColor().CGColor
+            button.addTarget(self, action: "buttonTappedOnScreen:", forControlEvents: .TouchUpInside)
             self.view.addSubview(button)
         }
+        makeColor()
+    }
+ 
+    
+    // MARK: - UI Color and Text
+    
+    func makeColor() {
+        let buttonArray = [zeroButton, sevenButton, eightButton, nineButton, divideButton, fourButton, fiveButton, sixButton, multiplicationButton, oneButton, twoButton, threeButton, minusButton, enterButton, plusButton]
+        for button in buttonArray {
+            switch button {
+            case zeroButton, oneButton, twoButton, threeButton, fourButton, fiveButton, sixButton, sevenButton, eightButton, nineButton:
+                button.backgroundColor = UIColor(red: 0.667, green: 0.667, blue: 0.667, alpha: 1.00)
+            case divideButton, multiplicationButton, minusButton, plusButton:
+                button.backgroundColor = UIColor(red: 0.992, green: 0.502, blue: 0.137, alpha: 1.00)
+                button.setTitleColor(.whiteColor(), forState: .Normal)
+            default:
+                button.backgroundColor = UIColor(red: 0.392, green: 0.541, blue: 0.404, alpha: 1.00)
+                button.setTitleColor(.whiteColor(), forState: .Normal)
+            }
+        }
+        calculatedLabel.text = "0"
+        calculatedLabel.font = UIFont(name: "Apple SD Gothic Neo", size: 60)
+        calculatedLabel.textAlignment = .Right
     }
     
     func addTitlesToNumberButtons() {
@@ -71,6 +106,8 @@ class ViewController: UIViewController {
             count++
         }
     }
+    
+    // MARK: - CONSTRAINTS
     
     func addConstraints() {
         
@@ -100,7 +137,7 @@ class ViewController: UIViewController {
                 let widthConstraint = NSLayoutConstraint(item: button, attribute: .Width, relatedBy: .Equal, toItem: self.view, attribute: .Width, multiplier: 0.25, constant: 0)
                 self.view.addConstraints([heightConstraint, widthConstraint])
             }
-            multiplicationButton.setTitle("*", forState: .Normal)
+            multiplicationButton.setTitle("x", forState: .Normal)
             divideButton.setTitle("/", forState: .Normal)
             minusButton.setTitle("-", forState: .Normal)
             plusButton.setTitle("+", forState: .Normal)
@@ -149,12 +186,26 @@ class ViewController: UIViewController {
                 return
             }
         }
-        
-        
     }
     
+    // MARK: - BUTTON ACTION FUNCTIONS
     
-    
-    
-    
+    func buttonTappedOnScreen(sender: UIButton!) {
+        switch sender {
+        case divideButton, multiplicationButton, minusButton, plusButton:
+            guard let operation = sender.titleLabel?.text else { return }
+            calculatedLabel.text = operation
+            CalculatorController.operations(operation)
+        case enterButton:
+            displayNumber = ""
+            if let number = CalculatorController.enter() {
+                calculatedLabel.text = number
+            }
+        default:
+            guard let number = sender.titleLabel?.text else { return }
+            self.displayNumber += number
+            calculatedLabel.text = self.displayNumber
+            CalculatorController.number(number)
+        }
+    }
 }
