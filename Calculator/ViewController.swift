@@ -13,6 +13,7 @@ class ViewController: UIViewController {
     // MARK: - Properties
     
     static  let sharedInstance = ViewController()
+    private let calculator = CalculatorController()
     
     var calculatedLabel = UILabel()
     var zeroButton = UIButton()
@@ -39,7 +40,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         createLabel()
         createAllButtons()
-        addConstraints()
+        addColorToView()
+        createConstraintsForButtons()
         addTitlesToNumberButtons()
     }
     
@@ -50,15 +52,21 @@ class ViewController: UIViewController {
     
     // MARK: - UI Creation
     
+    // Creates The Math Display Label
     func createLabel() {
         calculatedLabel.translatesAutoresizingMaskIntoConstraints = false
         calculatedLabel.backgroundColor = UIColor.blackColor()
         calculatedLabel.textColor = .whiteColor()
+        calculatedLabel.text = "0"
+        calculatedLabel.font = UIFont(name: "Apple SD Gothic Neo", size: 60)
+        calculatedLabel.textAlignment = .Right
         
         view.addSubview(calculatedLabel)
         
     }
     
+    
+    // Creates Each Button With It's Default Attributes
     func createAllButtons() {
         let buttonArray = [zeroButton, sevenButton, eightButton, nineButton, divideButton, fourButton, fiveButton, sixButton, multiplicationButton, oneButton, twoButton, threeButton, minusButton, enterButton, plusButton]
         
@@ -73,13 +81,13 @@ class ViewController: UIViewController {
             button.addTarget(self, action: "buttonTappedOnScreen:", forControlEvents: .TouchUpInside)
             self.view.addSubview(button)
         }
-        makeColor()
     }
- 
+    
     
     // MARK: - UI Color and Text
     
-    func makeColor() {
+    // Adds Background color to all buttons in view
+    func addColorToView() {
         let buttonArray = [zeroButton, sevenButton, eightButton, nineButton, divideButton, fourButton, fiveButton, sixButton, multiplicationButton, oneButton, twoButton, threeButton, minusButton, enterButton, plusButton]
         for button in buttonArray {
             switch button {
@@ -93,11 +101,11 @@ class ViewController: UIViewController {
                 button.setTitleColor(.whiteColor(), forState: .Normal)
             }
         }
-        calculatedLabel.text = "0"
-        calculatedLabel.font = UIFont(name: "Apple SD Gothic Neo", size: 60)
-        calculatedLabel.textAlignment = .Right
+        
     }
     
+    
+    // Function Adds Titles To All Buttons
     func addTitlesToNumberButtons() {
         let buttonArray = [zeroButton, oneButton, twoButton, threeButton, fourButton, fiveButton, sixButton, sevenButton, eightButton, nineButton]
         var count = 0
@@ -105,28 +113,32 @@ class ViewController: UIViewController {
             button.setTitle("\(count)", forState: .Normal)
             count++
         }
+        multiplicationButton.setTitle("x", forState: .Normal)
+        divideButton.setTitle("/", forState: .Normal)
+        minusButton.setTitle("-", forState: .Normal)
+        plusButton.setTitle("+", forState: .Normal)
+        enterButton.setTitle("Enter", forState: .Normal)
     }
     
     // MARK: - CONSTRAINTS
     
-    func addConstraints() {
+    // Adds Constraints To Every Item In The View
+    func createConstraintsForButtons() {
         
         // Calculated Label Horizontal and Vertical Constraints
         let calcHorizontalConstraint = NSLayoutConstraint(item: calculatedLabel, attribute: .CenterX, relatedBy: .Equal, toItem: self.view, attribute: .CenterX, multiplier: 1, constant: 0)
         let calcTopMarginContstraint = NSLayoutConstraint(item: calculatedLabel, attribute: .Top, relatedBy: .Equal, toItem: self.view, attribute: .Top, multiplier: 1, constant: 0)
+        
         // Calculated Label Height and Width Constraints
         let calcWidthConstraints = NSLayoutConstraint(item: calculatedLabel, attribute: .Width, relatedBy: .Equal, toItem: self.view, attribute: .Width, multiplier: 1, constant: 0)
         let calcHeightConstraints = NSLayoutConstraint(item: calculatedLabel, attribute: .Height, relatedBy: .Equal, toItem: self.view, attribute: .Height, multiplier: 0.30, constant: 0)
         
         self.view.addConstraints([ calcHorizontalConstraint, calcHeightConstraints, calcWidthConstraints, calcTopMarginContstraint])
         
-        createWidthAndHeightConstraintForButtons()
-    }
-    
-    func createWidthAndHeightConstraintForButtons() {
+        
+        let buttonArray = [zeroButton, sevenButton, eightButton, nineButton, divideButton, fourButton, fiveButton, sixButton, multiplicationButton, oneButton, twoButton, threeButton, minusButton, enterButton, plusButton]
         
         // Add Height and Width Constraints
-        let buttonArray = [zeroButton, sevenButton, eightButton, nineButton, divideButton, fourButton, fiveButton, sixButton, multiplicationButton, oneButton, twoButton, threeButton, minusButton, enterButton, plusButton]
         for button in buttonArray {
             if button == zeroButton {
                 let heightConstraint = NSLayoutConstraint(item: button, attribute: .Height, relatedBy: .Equal, toItem: self.view, attribute: .Height, multiplier: 0.175, constant: 0)
@@ -137,11 +149,6 @@ class ViewController: UIViewController {
                 let widthConstraint = NSLayoutConstraint(item: button, attribute: .Width, relatedBy: .Equal, toItem: self.view, attribute: .Width, multiplier: 0.25, constant: 0)
                 self.view.addConstraints([heightConstraint, widthConstraint])
             }
-            multiplicationButton.setTitle("x", forState: .Normal)
-            divideButton.setTitle("/", forState: .Normal)
-            minusButton.setTitle("-", forState: .Normal)
-            plusButton.setTitle("+", forState: .Normal)
-            enterButton.setTitle("Enter", forState: .Normal)
         }
         
         // Add button horizontal Constraint
@@ -190,22 +197,20 @@ class ViewController: UIViewController {
     
     // MARK: - BUTTON ACTION FUNCTIONS
     
+    
+    // Takes in sender (button) and sends it to the calculator controller. This function also updates the calculator output 
     func buttonTappedOnScreen(sender: UIButton!) {
         switch sender {
-        case divideButton, multiplicationButton, minusButton, plusButton:
-            guard let operation = sender.titleLabel?.text else { return }
-            calculatedLabel.text = operation
-            CalculatorController.operations(operation)
         case enterButton:
-            displayNumber = ""
-            if let number = CalculatorController.enter() {
-                calculatedLabel.text = number
-            }
+            guard let output = calculator.enterPressed() else { return }
+            calculatedLabel.text = output
+        case divideButton, minusButton, plusButton, multiplicationButton:
+            guard let input = sender.titleLabel?.text else { return }
+            calculator.operationReceived(input)
         default:
-            guard let number = sender.titleLabel?.text else { return }
-            self.displayNumber += number
-            calculatedLabel.text = self.displayNumber
-            CalculatorController.number(number)
+            guard let input = sender.titleLabel?.text else { return }
+            let output = calculator.numberReceived(input)
+            calculatedLabel.text = output
         }
     }
 }

@@ -13,112 +13,112 @@ import UIKit
 
 class CalculatorController {
     
-    static private var stack = [Int]()
+    // MARK: - Properties
     
-    static private var number = ""
-    static private var operations = ""
+    private var stack = [Double]()
+    private var currentInput = ""
+    private var currentOutput = ""
     
+    // MARK: - Receive Button Functions
     
-    
-    static func number(number: String) {
-        self.number += number
-        
-        
+    func numberReceived(input: String) -> String {
+        currentInput += input
+        return String(currentInput)
     }
     
-    static func operations(operation: String) {
-        
-        if operations.isEmpty {
-            operations = operation
-        } else {
-            return
+    func operationReceived(input: String) {
+        if stack.count >= 2 {
+            currentInput = input
         }
-        
     }
     
-    static func enter() -> String? {
-        if (stack.count < 2) && operations.isEmpty && !number.isEmpty {
-            guard let number = Int(self.number) else { return nil }
+    func enterPressed() -> String? {
+        switch currentInput {
+        case "/", "x", "+", "-":
+            let output = checkState()
+            return output
+        case "":
+            // Invalid Input
+            return nil
+        default:
+            guard let number = Double(currentInput) else { return nil }
             stack.append(number)
-            self.number = ""
-            return nil
+            let output = currentInput
+            currentInput = ""
+            return output
         }
-        
-        if stack.count > 2  {
-            stack.removeAll()
-            self.number = ""
-            return nil
-        }
-        
-        if stack.count == 2 && !operations.isEmpty {
-            switch operations {
-            case "-":
-                guard let number = subtraction() else { return nil }
-                stack.removeAll()
-                operations = ""
-                return String(number)
-            case "+":
-                guard let number = addition() else { return nil }
-                stack.removeAll()
-                operations = ""
-                return String(number)
-            case "x":
-                guard let number = multiplication() else { return nil }
-                stack.removeAll()
-                operations = ""
-                return String(number)
+    }
+    
+    // MARK: - Button & Math Logic Functions
+    
+    // Function Checks For A Valid State For Operation To Be Carried Out Then Calls For Operation And Resets Input State
+    private func checkState() -> String {
+        if stack.count >= 2 {
+            switch currentInput {
             case "/":
-                guard let number = division() else { return nil }
-                stack.removeAll()
-                operations = ""
-                return String(number)
+                currentInput = ""
+                return divide()
+                
+            case "x":
+                currentInput = ""
+                return multiply()
+                
+            case "+":
+                currentInput = ""
+                return add()
+                
+            case "-":
+                currentInput = ""
+                return subtract()
+                
             default:
-                stack.removeAll()
-                return nil
+                return ""
+                
             }
         }
-        
+        currentInput = ""
         stack.removeAll()
-        return nil
+        return "Enter Number"
     }
     
     
-    static func popStack() -> Int? {
-        guard let number = stack.popLast() else { return nil }
-        return number
+    // Functions Implement Math And Return A String
+    private func divide() -> String {
+        let numbers = operation()
+        let number = numbers.numberOne / numbers.numberTwo
+        stack.append(number)
+        return String(number)
+    }
+    
+    private func multiply() -> String {
+        let numbers = operation()
+        let number = numbers.numberOne * numbers.numberTwo
+        stack.append(number)
+        return String(number)
+    }
+    
+    
+    private func add() -> String {
+        let numbers = operation()
+        let number = numbers.numberOne + numbers.numberTwo
+        stack.append(number)
+        return String(number)
         
     }
     
-    static private func addition() -> Int? {
-        if let firstNumber = popStack(), let secondNumber = popStack() {
-            return firstNumber + secondNumber
-        }
-        return nil
+    private func subtract() -> String {
+        let numbers = operation()
+        let number = numbers.numberOne - numbers.numberTwo
+        stack.append(number)
+        return String(number)
     }
     
-    static private func subtraction() -> Int? {
-        if let firstNumber = popStack(), let secondNumber = popStack() {
-            return secondNumber - firstNumber
-        }
-        return nil
+    // Force Unwrapping - SHOULD ONLY BE CALLED WHEN PREFACED BY A CHECK ON THE STACK
+    private func operation() -> (numberOne: Double, numberTwo: Double) {
+        let secondNumber = stack.popLast()!
+        let firstNumber = stack.popLast()!
+        
+        return (firstNumber, secondNumber)
     }
-    
-    static private func division() -> Double? {
-        if let firstNumber = popStack(), let secondNumber = popStack() {
-            return Double(secondNumber) / Double(firstNumber)
-        }
-        return nil
-    }
-    
-    
-    static private func multiplication() -> Int? {
-        if let firstNumber = popStack(), let secondNumber = popStack() {
-            print(firstNumber)
-            print(secondNumber)
-            return firstNumber * secondNumber
-        }
-        return nil
-    }
-    
     
 }
